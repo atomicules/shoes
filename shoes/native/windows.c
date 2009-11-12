@@ -587,6 +587,17 @@ shoes_app_win32proc(
 
     case WM_KEYDOWN:
       app->os.altkey = false;
+	  switch(w)
+	  {
+			default: {
+						 VALUE v;
+        char letter = w;
+		 v = rb_str_new(&letter, 1);
+		shoes_app_keydown(app, v);
+					 }
+				
+	  }
+	  break;
     case WM_SYSKEYDOWN:
       if (w == VK_CONTROL)
         app->os.ctrlkey = true;
