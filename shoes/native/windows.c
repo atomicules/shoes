@@ -589,13 +589,12 @@ shoes_app_win32proc(
       app->os.altkey = false;
 	  switch(w)
 	  {
-			default: {
-						 VALUE v;
+		default: {
+		VALUE v;
         char letter = w;
-		 v = rb_str_new(&letter, 1);
+		v = rb_str_new(&letter, 1);
 		shoes_app_keydown(app, v);
-					 }
-				
+		}
 	  }
 	  break;
     case WM_SYSKEYDOWN:
@@ -666,7 +665,14 @@ shoes_app_win32proc(
         app->os.altkey = false;
       else if (w == VK_SHIFT)
         app->os.shiftkey = false;
-    break;
+	  else
+		{
+		VALUE v;
+        char letter = w;
+		v = rb_str_new(&letter, 1);
+		shoes_app_keyup(app, v);
+		}
+		break;
 
     case WM_MOUSEWHEEL:
     {
