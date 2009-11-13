@@ -592,6 +592,7 @@ shoes_app_win32proc(
 		default: {
 		VALUE v;
         char letter = w;
+		letter = tolower(letter); //Keyup/down must return lower case
 		v = rb_str_new(&letter, 1);
 		shoes_app_keydown(app, v);
 		}
@@ -669,6 +670,7 @@ shoes_app_win32proc(
 		{
 		VALUE v;
         char letter = w;
+		letter = tolower(letter); //Keyup/down must return lower case
 		v = rb_str_new(&letter, 1);
 		shoes_app_keyup(app, v);
 		}
