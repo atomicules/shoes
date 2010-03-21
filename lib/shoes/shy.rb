@@ -1,3 +1,4 @@
+
 #
 # lib/shoes/shy.rb
 # Shy, the Shoes YAML archive format
@@ -12,7 +13,18 @@ require 'yaml'
 class Shy
   VERSION = 0x0001
   MAGIC   = "_shy".freeze
-  LAYOUT  = "A4SL".freeze
+  
+  # From http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/256730
+  archti = 0xdeadbeef 
+  endian_type = {
+    Array(archti).pack("V*") => :little,
+    Array(archti).pack("N*") => :big
+  }
+  if endian_type[Array(archti).pack("L*")] == big
+    LAYOUT = "A4vV".freeze
+  else 
+    LAYOUT  = "A4SL".freeze
+  end
 
   yaml_as 'tag:hackety.org,2007:shy'
   attr_accessor :name, :creator, :version, :launch
