@@ -20,7 +20,7 @@ class Shy
     Array(archti).pack("V*") => :little,
     Array(archti).pack("N*") => :big
   }
-  if endian_type[Array(archti).pack("L*")] == big
+  if endian_type[Array(archti).pack("L*")] == :big
     LAYOUT = "A4vV".freeze
   else 
     LAYOUT  = "A4SL".freeze
