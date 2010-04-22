@@ -6,3 +6,7 @@ shoes/version.h
 deps
 dist
 pkg
+depsbackups
+.DS_Store
+Shoes.*.zip
+Shoes.app
