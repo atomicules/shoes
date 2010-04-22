@@ -161,12 +161,12 @@ task :build => [:build_os, "dist/VERSION.txt"] do
   when /darwin/
     if ENV['SHOES_DEPS_PATH']
       dylibs = %w[lib/libcairo.2.dylib lib/libpixman-1.0.dylib lib/libgmodule-2.0.0.dylib lib/libintl.8.dylib lib/libruby.dylib
-         lib/libglib-2.0.0.dylib lib/libgobject-2.0.0.dylib lib/libpng12.0.dylib lib/libpango-1.0.0.dylib 
+         lib/libglib-2.0.0.dylib lib/libgobject-2.0.0.dylib lib/libpng14.dylib lib/libpango-1.0.0.dylib 
          lib/pango/1.6.0/modules/pango-basic-atsui.la lib/libpangocairo-1.0.0.dylib 
          lib/pango/1.6.0/modules/pango-basic-atsui.so etc/pango/pango.modules
          lib/pango/1.6.0/modules/pango-arabic-lang.so lib/pango/1.6.0/modules/pango-arabic-lang.la
          lib/pango/1.6.0/modules/pango-indic-lang.so lib/pango/1.6.0/modules/pango-indic-lang.la
-         lib/libjpeg.62.dylib lib/libgif.4.dylib lib/libportaudio.2.dylib]
+         lib/libjpeg.8.dylib lib/libgif.4.dylib lib/libportaudio.2.dylib]
       if ENV['VIDEO']
         dylibs.push *%w[lib/liba52.0.dylib lib/libfaac.0.dylib lib/libfaad.0.dylib lib/libmp3lame.0.dylib
           lib/libvorbis.0.dylib lib/libogg.0.dylib
@@ -195,7 +195,7 @@ task :build => [:build_os, "dist/VERSION.txt"] do
     ln_s  "lib#{ruby_so}.so", "dist/lib#{ruby_so}.so.#{ruby_v[/^\d+\.\d+/]}"
     cp    "/usr/lib/libgif.so", "dist/libgif.so.4"
     ln_s  "libgif.so.4", "dist/libungif.so.4"
-    cp    "/usr/lib/libjpeg.so", "dist/libjpeg.so.62"
+    cp    "/usr/lib/libjpeg.so", "dist/libjpeg.so.8"
     cp    "/usr/lib/libcurl.so", "dist/libcurl.so.4"
     cp    "/usr/lib/libportaudio.so", "dist/libportaudio.so.2"
     cp    "/usr/lib/libsqlite3.so", "dist/libsqlite3.so.0"
@@ -400,7 +400,7 @@ else
     DLEXT = "dylib"
     LINUX_CFLAGS << " -DSHOES_QUARTZ -Wall -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -fpascal-strings #{Config::CONFIG["CFLAGS"]} -x objective-c -fobjc-exceptions"
     LINUX_LDFLAGS = "-framework Cocoa -framework Carbon -dynamiclib -Wl,-single_module #{Config::CONFIG["LDFLAGS"]} INSTALL_NAME"
-    LINUX_LIB_NAMES << 'pixman-1' << 'jpeg.62'
+    LINUX_LIB_NAMES << 'pixman-1' << 'jpeg.8'
     if ENV['VIDEO']
       if VLC_0_8
         LINUX_CFLAGS << " -DVLC_0_8"
