@@ -18,12 +18,153 @@
 #define IDC_HAND MAKEINTRESOURCE(32649)
 #endif
 
+#ifndef BIF_NONEWFOLDERBUTTON
+#define BIF_NONEWFOLDERBUTTON 0x200
+#endif
+
 static WNDPROC shoes_original_edit_line_proc = NULL;
+HHOOK hhook;
+VALUE kh_up_v = NULL;
+VALUE kh_down_v = NULL;
 
 shoes_code shoes_classex_init();
 LRESULT CALLBACK shoes_app_win32proc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK shoes_slot_win32proc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK shoes_edit_line_win32proc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK shoes_keyhook(int, WPARAM, LPARAM);
+
+#define KEYUPDOWN \
+  if (vk == VK_LCONTROL) \
+    v = ID2SYM(rb_intern("left_ctrl")); \
+  else if (vk == VK_RCONTROL) \
+    v = ID2SYM(rb_intern("right_ctrl")); \
+  else if (vk == VK_LMENU) \
+    v = ID2SYM(rb_intern("left_alt")); \
+  else if (vk == VK_RMENU) \
+    v = ID2SYM(rb_intern("right_alt")); \
+  else if (vk == VK_LSHIFT) \
+    v = ID2SYM(rb_intern("left_shift")); \
+  else if (vk == VK_RSHIFT) \
+    v = ID2SYM(rb_intern("right_shift")); \
+  else if (vk == VK_ESCAPE) \
+    v = ID2SYM(rb_intern("escape")); \
+  else if (vk == VK_INSERT) \
+    v = ID2SYM(rb_intern("insert")); \
+  else if (vk == VK_DELETE) \
+    v = ID2SYM(rb_intern("delete")); \
+  else if (vk == VK_PRIOR) \
+    v = ID2SYM(rb_intern("page_up")); \
+  else if (vk == VK_NEXT) \
+    v = ID2SYM(rb_intern("page_down")); \
+  else if (vk == VK_HOME) \
+    v = ID2SYM(rb_intern("home")); \
+  else if (vk == VK_END) \
+    v = ID2SYM(rb_intern("end")); \
+  else if (vk == VK_LEFT) \
+    v = ID2SYM(rb_intern("left")); \
+  else if (vk == VK_UP) \
+    v = ID2SYM(rb_intern("up")); \
+  else if (vk == VK_RIGHT) \
+    v = ID2SYM(rb_intern("right")); \
+  else if (vk == VK_DOWN) \
+    v = ID2SYM(rb_intern("down")); \
+  else if (vk == VK_F1) \
+    v = ID2SYM(rb_intern("f1")); \
+  else if (vk == VK_F2) \
+    v = ID2SYM(rb_intern("f2")); \
+  else if (vk == VK_F2) \
+    v = ID2SYM(rb_intern("f2")); \
+  else if (vk == VK_F3) \
+    v = ID2SYM(rb_intern("f3")); \
+  else if (vk == VK_F4) \
+    v = ID2SYM(rb_intern("f4")); \
+  else if (vk == VK_F5) \
+    v = ID2SYM(rb_intern("f5")); \
+  else if (vk == VK_F6) \
+    v = ID2SYM(rb_intern("f6")); \
+  else if (vk == VK_F7) \
+    v = ID2SYM(rb_intern("f7")); \
+  else if (vk == VK_F8) \
+    v = ID2SYM(rb_intern("f8")); \
+  else if (vk == VK_F9) \
+    v = ID2SYM(rb_intern("f9")); \
+  else if (vk == VK_F10) \
+    v = ID2SYM(rb_intern("f10")); \
+  else if (vk == VK_F11) \
+    v = ID2SYM(rb_intern("f11")); \
+  else if (vk == VK_F12) \
+    v = ID2SYM(rb_intern("f12")); \
+  else if (vk == 186) \
+  { \
+    letter = ':'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 187) \
+  { \
+    letter = ';'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 188) \
+  { \
+    letter = ','; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 189) \
+  { \
+    letter = '-'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 190) \
+  { \
+    letter = '.'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 191) \
+  { \
+    letter = '/'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 192) \
+  { \
+    letter = '@'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 219) \
+  { \
+    letter = '['; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 220) \
+  { \
+    letter = '_'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 221) \
+  { \
+    letter = ']'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 222) \
+  { \
+    letter = '^'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 226) \
+  { \
+    letter = '\\'; \
+    v = rb_str_new(&letter, 1); \
+  } \
+  else if (vk == 0x08) \
+    v = ID2SYM(rb_intern("backspace")); \
+  else if (vk == 0x09) \
+    v = ID2SYM(rb_intern("tab")); \
+  else if (vk == 0x0D) \
+    v = ID2SYM(rb_intern("enter")); \
+  else \
+  { \
+    letter = tolower(letter); \
+    v = rb_str_new(&letter, 1); \
+  }
 
 static WCHAR *
 shoes_wchar(char *utf8)
@@ -115,10 +256,51 @@ void shoes_native_init()
   shoes_classex_init();
   shoes_world->os.hidden = CreateWindow(SHOES_HIDDENCLS, SHOES_HIDDENCLS, WS_OVERLAPPEDWINDOW,
     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, shoes_world->os.instance, NULL);
+  
+  hhook = SetWindowsHookEx(WH_KEYBOARD_LL, shoes_keyhook, shoes_world->os.instance, 0);
+}
+
+LRESULT CALLBACK shoes_keyhook(int n, WPARAM w, LPARAM l)
+{
+  VALUE v;
+  WPARAM vk;
+  
+  kh_up_v = NULL;
+  kh_down_v = NULL;
+  
+  if (n == HC_ACTION)
+  {
+    KBDLLHOOKSTRUCT *kbdHS = (KBDLLHOOKSTRUCT *)l;
+    switch (w)
+    {
+      case WM_SYSKEYUP:
+      case WM_KEYUP:
+      {
+        vk = kbdHS->vkCode;
+        char letter = vk;
+        KEYUPDOWN
+        kh_up_v = v;
+      }
+      break;      
+      
+      case WM_SYSKEYDOWN:
+      case WM_KEYDOWN:
+      {
+        vk = kbdHS->vkCode;
+        char letter = vk;
+        KEYUPDOWN
+        kh_down_v = v;
+      }
+      break;      
+    }
+  }
+  
+  return CallNextHookEx(hhook, n, w, l);
 }
 
 void shoes_native_cleanup(shoes_world_t *world)
 {
+  UnhookWindowsHookEx(hhook);
 }
 
 void shoes_native_quit()
@@ -215,147 +397,6 @@ void shoes_native_remove_item(SHOES_SLOT_OS *slot, VALUE item, char c)
     if (app->os.ctrlkey) \
       KEY_STATE(control); \
     shoes_app_keypress(app, v); \
-  }
-
-#define KEYUPDOWN \
-  VALUE v; \
-  char letter = w; \
-  if (w == VK_LCONTROL) \
-    v = ID2SYM(rb_intern("left_ctrl")); \
-  else if (w == VK_RCONTROL) \
-    v = ID2SYM(rb_intern("right_ctrl")); \
-  else if (w == VK_CONTROL) \
-    v = ID2SYM(rb_intern("ctrl")); \
-  else if (w == VK_LMENU) \
-    v = ID2SYM(rb_intern("left_alt")); \
-  else if (w == VK_RMENU) \
-    v = ID2SYM(rb_intern("right_alt")); \
-  else if (w == VK_MENU) \
-    v = ID2SYM(rb_intern("alt")); \
-  else if (w == VK_LSHIFT) \
-    v = ID2SYM(rb_intern("left_shift")); \
-  else if (w == VK_RSHIFT) \
-    v = ID2SYM(rb_intern("right_shift")); \
-  else if (w == VK_SHIFT) \
-    v = ID2SYM(rb_intern("shift")); \
-  else if (w == VK_ESCAPE) \
-    v = ID2SYM(rb_intern("escape")); \
-  else if (w == VK_INSERT) \
-    v = ID2SYM(rb_intern("insert")); \
-  else if (w == VK_DELETE) \
-    v = ID2SYM(rb_intern("delete")); \
-  else if (w == VK_PRIOR) \
-    v = ID2SYM(rb_intern("page_up")); \
-  else if (w == VK_NEXT) \
-    v = ID2SYM(rb_intern("page_down")); \
-  else if (w == VK_HOME) \
-    v = ID2SYM(rb_intern("home")); \
-  else if (w == VK_END) \
-    v = ID2SYM(rb_intern("end")); \
-  else if (w == VK_LEFT) \
-    v = ID2SYM(rb_intern("left")); \
-  else if (w == VK_UP) \
-    v = ID2SYM(rb_intern("up")); \
-  else if (w == VK_RIGHT) \
-    v = ID2SYM(rb_intern("right")); \
-  else if (w == VK_DOWN) \
-    v = ID2SYM(rb_intern("down")); \
-  else if (w == VK_F1) \
-    v = ID2SYM(rb_intern("f1")); \
-  else if (w == VK_F2) \
-    v = ID2SYM(rb_intern("f2")); \
-  else if (w == VK_F2) \
-    v = ID2SYM(rb_intern("f2")); \
-  else if (w == VK_F3) \
-    v = ID2SYM(rb_intern("f3")); \
-  else if (w == VK_F4) \
-    v = ID2SYM(rb_intern("f4")); \
-  else if (w == VK_F5) \
-    v = ID2SYM(rb_intern("f5")); \
-  else if (w == VK_F6) \
-    v = ID2SYM(rb_intern("f6")); \
-  else if (w == VK_F7) \
-    v = ID2SYM(rb_intern("f7")); \
-  else if (w == VK_F8) \
-    v = ID2SYM(rb_intern("f8")); \
-  else if (w == VK_F9) \
-    v = ID2SYM(rb_intern("f9")); \
-  else if (w == VK_F10) \
-    v = ID2SYM(rb_intern("f10")); \
-  else if (w == VK_F11) \
-    v = ID2SYM(rb_intern("f11")); \
-  else if (w == VK_F12) \
-    v = ID2SYM(rb_intern("f12")); \
-  else if (w == 186) \
-  { \
-    letter = ':'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 187) \
-  { \
-    letter = ';'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 188) \
-  { \
-    letter = ','; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 189) \
-  { \
-    letter = '-'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 190) \
-  { \
-    letter = '.'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 191) \
-  { \
-    letter = '/'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 192) \
-  { \
-    letter = '@'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 219) \
-  { \
-    letter = '['; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 220) \
-  { \
-    letter = '_'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 221) \
-  { \
-    letter = ']'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 222) \
-  { \
-    letter = '^'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 226) \
-  { \
-    letter = '\\'; \
-    v = rb_str_new(&letter, 1); \
-  } \
-  else if (w == 0x08) \
-    v = ID2SYM(rb_intern("backspace")); \
-  else if (w == 0x09) \
-    v = ID2SYM(rb_intern("tab")); \
-  else if (w == 0x0D) \
-    v = ID2SYM(rb_intern("enter")); \
-  else \
-  { \
-    letter = tolower(letter); \
-    v = rb_str_new(&letter, 1); \
   }
 
 static void
@@ -501,7 +542,7 @@ shoes_slot_win32proc(
       break;
 
       case WM_SETFOCUS:
-        if (!NIL_P(canvas->slot->focus))
+        if (!NIL_P(canvas->slot->focus) && TYPE(canvas->slot->focus) != T_FALSE)
         {
           shoes_control_focus(canvas->slot->focus);
         }
@@ -730,18 +771,15 @@ shoes_app_win32proc(
     break;
 
     case WM_KEYDOWN:
-      app->os.altkey = false;
+      app->os.altkey = FALSE;
     case WM_SYSKEYDOWN:
-      {
-        KEYUPDOWN
-        shoes_app_keydown(app, v);
-      }
+      shoes_app_keydown(app, kh_down_v);
       if (w == VK_CONTROL)
-        app->os.ctrlkey = true;
+        app->os.ctrlkey = TRUE;
       else if (w == VK_MENU)
-        app->os.altkey = true;
+        app->os.altkey = TRUE;
       else if (w == VK_SHIFT)
-        app->os.shiftkey = true;
+        app->os.shiftkey = TRUE;
       KEYPRESS(ESCAPE, escape)
       KEYPRESS(INSERT, insert)
       KEYPRESS(DELETE, delete)
@@ -797,16 +835,13 @@ shoes_app_win32proc(
 
     case WM_SYSKEYUP:
     case WM_KEYUP:
-      {
-        KEYUPDOWN
-        shoes_app_keyup(app, v);
-      }
+      shoes_app_keyup(app, kh_up_v);
       if (w == VK_CONTROL)
-        app->os.ctrlkey = false;
+        app->os.ctrlkey = FALSE;
       else if (w == VK_MENU)
-        app->os.altkey = false;
+        app->os.altkey = FALSE;
       else if (w == VK_SHIFT)
-        app->os.shiftkey = false;
+        app->os.shiftkey = FALSE;
     break;
 
     case WM_MOUSEWHEEL:
@@ -1068,9 +1103,9 @@ shoes_native_app_open(shoes_app *app, char *path, int dialog)
 
   app->slot->controls = Qnil;
   app->slot->focus = Qnil;
-  app->os.ctrlkey = false;
-  app->os.altkey = false;
-  app->os.shiftkey = false;
+  app->os.ctrlkey = FALSE;
+  app->os.altkey = FALSE;
+  app->os.shiftkey = FALSE;
 
   // remove the menu
   app->os.normal.left = 0;
@@ -1145,13 +1180,13 @@ shoes_native_loop()
             case VK_RIGHT: case VK_PRIOR: case VK_NEXT:
               break;
             default:
-              msg = false;
+              msg = FALSE;
           }
         }
-        else msg = false;
+        else msg = FALSE;
       }
       else if (msgs.message == WM_SYSCHAR || msgs.message == WM_CHAR)
-        msg = false;
+        msg = FALSE;
       if (msg)
         msg = IsDialogMessage(focused, &msgs);
 
@@ -1329,7 +1364,7 @@ shoes_native_control_free(SHOES_CONTROL_REF ref)
 
 inline void shoes_win32_control_font(int id, HWND hwnd)
 {
-  SendDlgItemMessage(hwnd, id, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(true, 0));
+  SendDlgItemMessage(hwnd, id, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(TRUE, 0));
 }
 
 SHOES_SURFACE_REF
@@ -1396,7 +1431,7 @@ shoes_native_edit_line(VALUE self, shoes_canvas *canvas, shoes_place *place, VAL
   int cid = SHOES_CONTROL1 + RARRAY_LEN(canvas->slot->controls);
   SHOES_CONTROL_REF ref = CreateWindowEx(WS_EX_TRANSPARENT, TEXT("EDIT"), NULL,
       WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL |
-      (RTEST(ATTR(attr, secret)) ? ES_PASSWORD : NULL),
+      (RTEST(ATTR(attr, secret)) ? ES_PASSWORD : 0),
       place->ix + place->dx, place->iy + place->dy, place->iw, place->ih,
       canvas->slot->window, (HMENU)cid, 
       (HINSTANCE)GetWindowLong(canvas->slot->window, GWL_HINSTANCE),
