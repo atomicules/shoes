@@ -161,7 +161,7 @@ task :build => [:build_os, "dist/VERSION.txt"] do
   when /darwin/
     if ENV['SHOES_DEPS_PATH']
       dylibs = %w[lib/libcairo.2.dylib lib/libpixman-1.0.dylib lib/libgmodule-2.0.0.dylib lib/libintl.8.dylib lib/libruby.dylib
-         lib/libglib-2.0.0.dylib lib/libgobject-2.0.0.dylib lib/libpng14.dylib lib/libpango-1.0.0.dylib 
+         lib/libglib-2.0.0.dylib lib/libgobject-2.0.0.dylib lib/libgthread-2.0.0.dylib lib/libpng14.14.dylib lib/libpango-1.0.0.dylib 
          lib/pango/1.6.0/modules/pango-basic-atsui.la lib/libpangocairo-1.0.0.dylib 
          lib/pango/1.6.0/modules/pango-basic-atsui.so etc/pango/pango.modules
          lib/pango/1.6.0/modules/pango-arabic-lang.so lib/pango/1.6.0/modules/pango-arabic-lang.la
